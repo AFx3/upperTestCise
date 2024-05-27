@@ -5,26 +5,26 @@ from datetime import datetime
 
 ############################################### CONFIG PARAMS ########################################################
 
-url_rest = "http://10.50.1.130:8080/adaptor/api/v1/CISEMessageServiceREST/sendPullRequest" # URL per le richieste REST 
-url_websocket = "ws://10.50.1.130:8080/adaptor/adp" # URL per il websocket
+url_rest = "http://10.50.1.130:8080/adaptor/api/v1/CISEMessageServiceREST/sendPullRequest" # REST URL to send POST requests 
+url_websocket = "ws://10.50.1.130:8080/adaptor/adp" # URL to connect to the adaptor via websocket
 
 ############################################### USER CHOICE ########################################################
 
-# funzione per ottenere la scelta dell'utente
+# function to execute the user choice (sending requests or closing the program)
 def get_user_choice():
-    print("Seleziona l'azione da eseguire:")
-    print("0. ESCI")
-    print("1. Invia la Pull Request")
-    print("2. Esegui la Discovery")
-    print("3. Esegui la Subscribe")
-    print("4. Esegui la Unsubscribe")
-    choice = input("Inserisci il numero corrispondente all'azione: ")
+    print("SELECT the correspondin action NUMBER:")
+    print("0. EXIT")
+    print("1. Send Pull Request")
+    print("2. Discovery")
+    print("3. Subscribe")
+    print("4. Unsubscribe")
+    choice = input("Insert the number here: ")
     
     return choice
 
 ############################################## PULL req ########################################################
 
-# funzione per CREARE il payload della PULL REQUEST
+# function to create the payload of the pull request
 def create_request_pull(dataReq):
     json_data = {
         "pullType": "Request",
@@ -34,7 +34,7 @@ def create_request_pull(dataReq):
             "ServiceType": dataReq["serviceType"]
         }
     }
-    # dizionario vuoto per l'entità, lo vado a popolare prendendo i dati da dataReq se presenti con valore non nullo, aggiungendo la oppia chiave:valore 
+    # empty dictionary for the entity, I populate it by taking the data from dataReq if present with a non-null value, adding the key: value pair
     entity = {}
     if dataReq.get("name") is not None:
         entity["name"] = dataReq["name"]
@@ -45,6 +45,9 @@ def create_request_pull(dataReq):
 
     # verifico se il dizionario entity contiene almeno una coppia chiave-valore. 
     # se sì, aggiunge il dizionario entity come valore della chiave entity nel dizionario json_data["discoveryProfile"]
+    
+    # verify if the entity dictionary contains at least one key-value pair
+    # if so, add the entity dictionary as the value of the entity key in the json_data["discoveryProfile"] dictionary
     if entity:
         json_data["discoveryProfile"]["entity"] = entity
     
@@ -63,41 +66,50 @@ def create_request_pull(dataReq):
     if dataReq.get("senderServiceType") is not None:
         json_data["senderServiceType"] = dataReq["senderServiceType"]
         
-    # quindi popola il dizionario entity con i dati se presenti in dataReq (che è sempre un dizionario) e aggiunge questo dizionario a json_data solo se contiene dati    
-  
+    # then populate the entity dictionary with the data if present in dataReq (which is always a dictionary) and add this dictionary to json_data only if it contains data
+    # finally, return the json_data dictionary as a JSON string
     return json_data
 
-# funzione per INVIARE la PULL REQUEST come POST
+
+# function to SEND the PULL REQUEST as POST
 def send_pull_request(dataReq):
-    # headers per la richiesta HTTP post specificando che si trasmette un payload JSON
+ 
+    # headers for the HTTP post request specifying that a JSON payload is transmitted
     headers = {'Content-Type': 'application/json'}
     
-    # creo payload della richiesta usando create_request_pull passandogli il dizionario (vedi sezione #### dizionari richieste #####) che sarà dataReq_pull
+    # create the request payload using create_request_pull by passing it the dictionary (see section #### request dictionaries ####) which will be dataReq_pull
     payload = create_request_pull(dataReq)
     
     try:
-        # invia una richiesta POST all'URL specificato con gli header e il payload
+        # send a POST request to the specified URL with the headers and payload
         response = requests.post(url_rest, headers=headers, json=payload)
-        # stampa il codice di stato della risposta 
+    
+        #print the response status code
         print(f"Status code: {response.status_code}")
         
-        if response.status_code == 200: # se la risposta ha codice di stato 200 (OK)
-            print("Risposta ricevuta con successo:")
-            print(json.dumps(response.json(), indent=4)) # stampa la risposta JSON ricevuta formattata con indentazione
+        # if the response has a status code of 200, print the JSON response received formatted with indentation
+        if response.status_code == 200:
+            
+            print("Response correctly received:")
+            print(json.dumps(response.json(), indent=4)) 
+            
         else:
-            # se la risposta ha un codice di errore, stampa il codice di stato e il contenuto della risposta
-            print(f"Errore nella richiesta HTTP: {response.status_code}")
-            print("Contenuto della risposta:", response.text)
+        
+            # otherwise, print the status code and the response content
+            print(f"Errore in the HTTP request: {response.status_code}")
+            print("Response content:", response.text)
+            
     except Exception as e:
-        # gestisce eventuali eccezioni che possono verificarsi durante l'invio della richiesta
-        print(f"Errore durante la richiesta HTTP: {e}")
+    
+        # handles any exceptions that may occur during the request
+        print(f"Error during HTTP request: {e}")
 
 
-# da qui in poi non commento perchè le funzioni sono analoghe a quelle sopra, cambia solo il tipo di richiesta e il payload
+# from here on I don't comment because the functions are analogous to those above, only the type of request and the payload change
         
 ############################################## DISCOVERY ########################################################
 
-# funzione per CREARE il payload 
+# function to create the payload of the discovery request
 def create_request_discovery(dataReq):
     json_data = {
         "pullType": "Discover",
@@ -131,7 +143,7 @@ def create_request_discovery(dataReq):
     
     return json.dumps(json_data)
 
-# funzione per inviare la POST 
+# function to SEND the DISCOVERY POST REQUEST
 def send_discovery_request(dataReq):
     headers = {'Content-Type': 'application/json'}
     payload = create_request_discovery(dataReq)
@@ -141,17 +153,17 @@ def send_discovery_request(dataReq):
         print(f"Status code: {response.status_code}")
         
         if response.status_code == 200:
-            print("Risposta ricevuta con successo:")
+            print("Response correctly received:")
             print(json.dumps(response.json(), indent=4))
         else:
-            print(f"Errore nella richiesta HTTP: {response.status_code}")
-            print("Contenuto della risposta:", response.text)
+            print(f"Error in the HTTP request: {response.status_code}")
+            print("Response content:", response.text)
     except Exception as e:
-        print(f"Errore durante la richiesta HTTP: {e}")
+        print(f"Error HTTP request: {e}")
 
 ############################################## SUBSCRIBE ########################################################
 
-# funzione per CREARE il payload della SUBSCRIBE POST REQUEST
+# function to create the payload of the subscribe request
 def create_request_subscribe(dataReq):
     json_data = {
         "pullType": "Subscribe",
@@ -177,13 +189,14 @@ def create_request_subscribe(dataReq):
         json_data["recipient"]["serviceId"] = dataReq["serviceID"]
         
     if dataReq.get("maxFrequency") is not None:
-        # converti il valore della frequenza massima in iso8601 (errore adaptor che non riesce a fare il parsing del valore intero)
+        
+        # convert the value of the maximum frequency to iso8601 (adaptor error that cannot parse the integer value)
         duration_seconds = int(dataReq["maxFrequency"])
         duration_isoformat = "PT{}S".format(duration_seconds)  # durata in formato ISO8601
         json_data["subscriptionCapability"]["MaxFrequency"] = duration_isoformat
         
     if dataReq.get("refreshRate") is not None:
-        # converti il valore del refresh rate in un formato iso8601
+        # convert the refresh rate value to iso8601
         refresh_seconds = int(dataReq["refreshRate"])
         refresh_isoformat = "PT{}S".format(refresh_seconds)  # durata in formato ISO8601
         json_data["subscriptionCapability"]["RefreshRate"] = refresh_isoformat
@@ -193,7 +206,7 @@ def create_request_subscribe(dataReq):
     
         
     if dataReq.get("dataFreshness") is not None:
-        # converti il valore refresh rate in formato iso8601
+        # convert the data freshness value to iso8601
         fresh_seconds = int(dataReq["dataFreshness"])
         fresh_isoformat = "PT{}S".format(fresh_seconds)  # durata in formato ISO8601
         json_data["subscriptionCapability"]["RefreshRate"] = fresh_isoformat    
@@ -204,7 +217,7 @@ def create_request_subscribe(dataReq):
     return json.dumps(json_data)
 
 
-# funzione per INVIARE la SUBSCRIBE POST REQUEST
+# function to SEND the SUBSCRIBE POST REQUEST
 def send_subscribe_request(dataReq):
     headers = {'Content-Type': 'application/json'}
     payload = create_request_subscribe(dataReq)
@@ -214,17 +227,17 @@ def send_subscribe_request(dataReq):
         print(f"Status code: {response.status_code}")
         
         if response.status_code == 200:
-            print("Risposta ricevuta con successo:")
+            print("Response correctly received:")
             print(json.dumps(response.json(), indent=4))
         else:
-            print(f"Errore nella richiesta HTTP: {response.status_code}")
-            print("Contenuto della risposta:", response.text)
+            print(f"Errore during HTTP request: {response.status_code}")
+            print("response content:", response.text)
     except Exception as e:
-        print(f"Errore durante la richiesta HTTP: {e}")
+        print(f"Errore during HTTP request: {e}")
 
 ############################################## UNSUBSCRIBE ########################################################
 
-# funzione per CREARE il payload della richiesta di annullamento sottoscrizione
+# function to create the payload of the unsubscribe request
 def create_request_unsubscribe(dataReq):
     json_data = {
         "pullType": "Unsubscribe",
@@ -244,7 +257,7 @@ def create_request_unsubscribe(dataReq):
     return json.dumps(json_data)
 
 
-# funzione per INVIARE la POST di unsubcribe
+# function to SEND the UNSUBSCRIBE POST REQUEST
 def send_unsubscribe_request(dataReq):
     headers = {'Content-Type': 'application/json'}
     payload = create_request_unsubscribe(dataReq)
@@ -262,7 +275,7 @@ def send_unsubscribe_request(dataReq):
     except Exception as e:
         print(f"Errore durante la richiesta HTTP: {e}")
         
-############################################## DIZIONARI RICHIESTE ########################################################
+############################################## REQUESTS DICTIONARIES ########################################################
 
 dataReq_pull = {    
     "serviceType": "VesselService",  
@@ -303,66 +316,64 @@ dataReq_unsubscribe = {
 
 #################################################### WEBSOCKET ########################################################
 
-# funzione per gestire l'apertura della connessione websocket, una volta stabilita la connessione, utente sceglie la richiesta da inviare:
+
+# function to handle the opening of the websocket connection, once the connection is established, the user chooses the request to send
 def on_open(ws):
     print("Connessione al websocket stabilita.")
     
-    # get scelta dell'utente, uso il while loop per continuare a chiedere la scelta dell'utente, con 0 chiudo il programma
+    # get the user choice, use the while loop to continue asking the user's choice, with 0 I close the program
     while True:
         
-        choice = get_user_choice() # var per confrontare la scelta dell'utente da input
-    
-        # esegui l'azione corrispondente all'input
+        choice = get_user_choice() # var to match the user choice
+        # do the corresponding action to the user input
         match choice:
             case "1":
-                print("Invio PULL REQUEST...")
+                print("SENDING PULL REQUEST...")
                 send_pull_request(dataReq_pull)
             case "2":
-                print("Invio DISCOVERY...")
+                print("SENDING DISCOVERY...")
                 send_discovery_request(dataReq_discovery)
             case "3":
-                print("Invio SUBSCRIBE REQUEST...")
+                print("SENDING SUBSCRIBE REQUEST...")
                 send_subscribe_request(dataReq_subscribe)
             case "4":
-                print("Invio UNSUBSCRIBE REQUEST...")
+                print("SENDING UNSUBSCRIBE REQUEST...")
                 send_unsubscribe_request(dataReq_unsubscribe)
             case "0": 
-                print("Chiudo il programma...")
-                # chiudi la connessione websocket
+                print("Closing the program...")
+                # close the websocket connection
                 ws.close()
-                # chiudi il programma
+                # close the program
                 exit()
             case _:
-                print("Scelta non valida.")
-                # rimane nel loop
+                print("Invalid input.")
+                # if the user enters an invalid input, the loop continues
             
     
-# funzione che mostra i messaggi ricevuti dal socket
+# function to handle the reception of websocket messages
 def on_message(ws, message):
-    print("Messaggio ricevuto:", message)
+    print("Messagge riceived:", message)
 
-# funzione per gestire un eventuale errore nella connessione
+# function to handle the websocket connection error
 def on_error(ws, error):
-    print("Errore websocket:", error)
+    print("Websocket error:", error)
 
-# funzione per la chiusura della connessione websocket
-def on_close(ws, close_status_code, close_msg): # togliere commento nel main se la connessione non va a buon fine per diagnostica
-    print("Connessione websocket chiusa.")
+# function to handle the closure of the websocket connection
+def on_close(ws, close_status_code, close_msg): # delete the comment in the main() to see the diagnostic if the connection is not successful
+    print("Websocket connection closed correctly.")
     
 ################################################ MAIN ########################################################
 
-# funzione MAIN
+# function to run the program
 def main():
-    # Connessione al websocket
+    # connect to the websocket with a separate thread
     ws = websocket.WebSocketApp(url_websocket,
                                 on_open=on_open,
                                 on_message=on_message,
-                                #on_error=on_error,         togliere commento per diagnostica se connessione non riuscita
+                                #on_error=on_error,         DELETE THIS COMMENT IF YOU WANT TO SEE THE DIAGNOSTIC IF THE CONNECTION IS NOT SUCCESSFUL
                                 on_close=on_close)
-
-    # mi collego al websocket con un thread separato
     ws.run_forever()
 
-# eseguo il programma
+# call the main function and run the program
 if __name__ == "__main__":
     main()
