@@ -120,7 +120,9 @@ dataReq_pull = {
 
 dataReq_discovery = {    
     "serviceOperation": "Pull",
-    "serviceType": "VesselService",            
+    #"serviceType": "VesselService",
+    "ServiceRole": "Provider",
+    "ServiceStatus": "Online"          
 }
 
 # funzione per gestire l'apertura della connessione websocket
