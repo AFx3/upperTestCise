@@ -22,7 +22,12 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-# run
+# Run this script to send request to adaptor
 ```bash
 python3 p5.py
+```
+
+# run this script to receive requests
+```bash
+uvicorn app:app --host 10.50.1.181 --port 8000 --workers 1 --log-level debug
 ```
