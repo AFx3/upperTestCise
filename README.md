@@ -31,3 +31,5 @@ python3 p5.py
 ```bash
 uvicorn app:app --host 10.50.1.181 --port 8000 --workers 1 --log-level debug
 ```
+# NB
+app_just_pull_req_tested.py contains the previous code to handle the pull request only (to run it, rename the file in app.py)
